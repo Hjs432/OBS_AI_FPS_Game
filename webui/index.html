@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watermelon Aimbot · 参数控制台</title>
+<style>
+:root{
+  --bg:#080c11;
+  --bg-2:#0b1118;
+  --panel:#101821;
+  --panel-2:#0c131b;
+  --line:#1c2a37;
+  --line-2:#26394a;
+  --text:#e8f0f7;
+  --muted:#8fa3b8;
+  --dim:#6f8499;
+  --accent:#4ade80;
+  --accent-2:#22c55e;
+  --danger:#f87171;
+  --warn:#fbbf24;
+  --radius:14px;
+  --mono: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, "Liberation Mono", monospace;
+  --sans: "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1000px 620px at 88% -14%, rgba(74,222,128,.10), transparent 62%),
+    radial-gradient(820px 520px at -6% 0%, rgba(56,189,248,.07), transparent 56%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.5;
+  min-height:100vh;
+}
+::selection{background:rgba(74,222,128,.28)}
+
+/* ── 顶栏 ── */
+.topbar{
+  position:sticky; top:0; z-index:20;
+  display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
+  padding:13px 22px;
+  background:rgba(8,12,17,.84);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex; align-items:center; gap:12px; min-width:0}
+.logo{
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(150deg,#4ade80 0 55%,#ef4444 55% 100%);
+  display:grid;place-items:center;
+  font-weight:800;color:#04140b;font-size:16px;
+  box-shadow:0 6px 20px rgba(34,197,94,.22), inset 0 0 0 1px rgba(255,255,255,.22);
+}
+.brand h1{margin:0;font-size:15.5px;letter-spacing:.2px;white-space:nowrap}
+.brand p{margin:1px 0 0;color:var(--muted);font-size:11.5px}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel-2);
+  font-size:11.5px;color:var(--muted);white-space:nowrap;
+}
+.chip .dot{width:6px;height:6px;border-radius:50%;background:#64748b;flex-shrink:0}
+.chip.ok .dot{background:var(--accent);box-shadow:0 0 8px rgba(74,222,128,.75)}
+.chip.bad .dot{background:var(--danger);box-shadow:0 0 8px rgba(248,113,113,.6)}
+.chip.warn .dot{background:var(--warn)}
+
+/* ── 布局 ── */
+.layout{
+  display:grid;grid-template-columns:238px minmax(0,1fr);gap:24px;
+  max-width:1500px;margin:0 auto;padding:22px 22px 112px;
+}
+.sidebar{position:sticky;top:86px;align-self:start;max-height:calc(100vh - 112px);overflow:auto;padding-right:4px}
+.nav-title{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:2px 0 10px;padding-left:10px}
+.sidebar nav{display:flex;flex-direction:column;gap:2px}
+.nav-item{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:9px 10px;border-radius:9px;
+  color:var(--muted);text-decoration:none;cursor:pointer;
+  border:1px solid transparent;font-size:12.5px;
+  transition:background .14s,color .14s,border-color .14s;
+}
+.nav-item:hover{background:var(--panel);color:var(--text)}
+.nav-item.active{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.24);color:var(--text)}
+.nav-item .count{font-size:10.5px;color:var(--dim);font-family:var(--mono)}
+.nav-item.changed .count{color:var(--accent)}
+.side-actions{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.side-note{margin-top:12px;padding-left:10px;color:var(--dim);font-size:11px;line-height:1.6}
+
+.main{min-width:0;display:flex;flex-direction:column;gap:14px}
+.content{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+/* ── 卡片 ── */
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,.022),transparent 46%),var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 18px 16px;
+  scroll-margin-top:92px;
+}
+.card-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:2px}
+.card-head h2{font-size:14.5px;margin:0;letter-spacing:.2px}
+.card-head .badge{font-size:10.5px;font-family:var(--mono);color:var(--muted);border:1px solid var(--line);padding:3px 8px;border-radius:999px;white-space:nowrap}
+.card-desc{color:var(--muted);font-size:12px;margin:6px 0 14px;white-space:pre-line}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:12px}
+
+/* ── 字段 ── */
+.field{
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:12px 12px 10px;
+  display:flex;flex-direction:column;gap:8px;
+  transition:border-color .15s,box-shadow .15s;
+  min-width:0;
+}
+.field:focus-within{border-color:rgba(74,222,128,.45);box-shadow:0 0 0 3px rgba(74,222,128,.08)}
+.field.changed{border-color:rgba(74,222,128,.42)}
+.field.full{grid-column:1/-1}
+.field-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:22px}
+.field-top label{font-family:var(--mono);font-size:12.5px;color:#c7d6e5;word-break:break-all}
+.type-tag{font-family:var(--mono);font-size:9.5px;color:var(--dim);border:1px solid #223342;border-radius:999px;padding:2px 7px;flex-shrink:0;text-transform:uppercase;letter-spacing:.06em}
+.hint{color:var(--muted);font-size:11.5px;margin:0;white-space:pre-line;line-height:1.55}
+input[type=text],input[type=number],textarea{
+  width:100%;background:#0a1118;border:1px solid #22313f;color:var(--text);
+  border-radius:8px;padding:8px 10px;
+  font-family:var(--mono);font-size:12.5px;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+input[type=text]:hover,input[type=number]:hover,textarea:hover{border-color:#2e4457}
+input[type=text]:focus,input[type=number]:focus,textarea:focus{border-color:rgba(74,222,128,.55);box-shadow:0 0 0 3px rgba(74,222,128,.07)}
+textarea{min-height:96px;resize:vertical;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+
+/* ── 开关 ── */
+.switch{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;flex-shrink:0}
+.switch input{position:absolute;opacity:0;pointer-events:none}
+.track{
+  width:40px;height:22px;border-radius:999px;background:#1b2835;border:1px solid #27394a;
+  position:relative;transition:background .18s,border-color .18s;flex-shrink:0;
+}
+.track::after{
+  content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:#7d8fa3;transition:transform .18s,background .18s;
+}
+.switch input:checked + .track{background:rgba(34,197,94,.26);border-color:rgba(74,222,128,.55)}
+.switch input:checked + .track::after{transform:translateX(18px);background:var(--accent)}
+.switch input:focus-visible + .track{box-shadow:0 0 0 3px rgba(74,222,128,.16)}
+.switch .state{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:22px}
+.switch input:checked ~ .state{color:var(--accent)}
+
+/* ── 单选 ── */
+.radio-row{display:flex;flex-wrap:wrap;gap:8px}
+.radio{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border:1px solid #22313f;border-radius:9px;
+  background:#0a1118;cursor:pointer;font-size:12.5px;color:var(--muted);
+  transition:border-color .15s,background .15s,color .15s;
+}
+.radio input{accent-color:var(--accent-2);margin:0}
+.radio:has(input:checked){border-color:rgba(74,222,128,.55);background:rgba(34,197,94,.08);color:var(--text)}
+.radio:hover{border-color:#2e4457}
+
+/* ── 按钮 ── */
+.btn{
+  appearance:none;border:1px solid #26394a;background:#111b24;color:var(--text);
+  border-radius:9px;padding:9px 14px;
+  font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:.2px;
+  cursor:pointer;white-space:nowrap;
+  transition:transform .12s,background .15s,border-color .15s,opacity .15s;
+}
+.btn:hover{background:#16232f;border-color:#345069}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.primary{
+  background:linear-gradient(180deg,#4ade80,#22c55e);
+  border-color:#22c55e;color:#04220f;
+  box-shadow:0 8px 24px rgba(34,197,94,.22);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#65e894,#2bd66a)}
+.btn.danger{color:#fecaca;border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.08)}
+.btn.danger:hover{background:rgba(248,113,113,.16)}
+.btn.small{padding:6px 10px;font-size:11.5px}
+
+/* ── 底部保存栏 ── */
+.savebar{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:11px 22px;
+  background:rgba(8,12,17,.9);
+  backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);
+}
+.savebar .info{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.savebar .info b{color:var(--accent);font-family:var(--mono)}
+.path{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.savebar-actions{display:flex;gap:10px}
+
+/* ── 提示 / 横幅 / 弹窗 ── */
+#toast{position:fixed;right:20px;top:82px;z-index:60;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none}
+.toast{
+  max-width:430px;padding:11px 14px;border-radius:10px;
+  border:1px solid var(--line-2);background:#0d1620;
+  box-shadow:0 16px 44px rgba(0,0,0,.5);
+  font-size:12.5px;white-space:pre-line;line-height:1.5;
+  transition:opacity .2s,transform .2s;
+  animation:toastIn .22s ease;
+}
+.toast.success{border-color:rgba(74,222,128,.45)}
+.toast.error{border-color:rgba(248,113,113,.5)}
+.toast.warn{border-color:rgba(251,191,36,.45)}
+.toast.info{border-color:rgba(56,189,248,.4)}
+@keyframes toastIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+.banner{
+  display:flex;gap:12px;justify-content:space-between;align-items:flex-start;
+  padding:12px 14px;border-radius:11px;
+  border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.07);
+  font-size:12.5px;white-space:pre-line;line-height:1.6;
+}
+.banner.error{border-color:rgba(248,113,113,.42);background:rgba(248,113,113,.08)}
+.banner-actions{display:flex;gap:8px;flex-shrink:0}
+
+.modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(3,6,10,.66);backdrop-filter:blur(4px)}
+.modal.hidden{display:none}
+.modal-box{
+  width:min(450px,calc(100vw - 40px));
+  background:var(--panel);border:1px solid var(--line-2);border-radius:14px;
+  padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.62);
+}
+.modal-box h3{margin:0 0 8px;font-size:15px}
+.modal-box p{margin:0 0 18px;color:var(--muted);font-size:13px;white-space:pre-line;line-height:1.6}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px}
+
+.loading{padding:70px 20px;text-align:center;color:var(--muted);font-size:13px}
+.empty{padding:40px 20px;text-align:center;color:var(--danger);font-size:13px}
+
+/* ── 响应式 ── */
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr;padding:16px 14px 128px}
+  .card{scroll-margin-top:150px}
+  .sidebar{position:static;max-height:none;overflow:visible}
+  .sidebar nav{flex-direction:row;flex-wrap:wrap}
+  .nav-title{display:none}
+  .side-actions{flex-direction:row;flex-wrap:wrap}
+  .side-note{display:none}
+  .topbar{padding:12px 14px}
+}
+@media (max-width:640px){
+  .fields{grid-template-columns:1fr}
+  .chips{display:none}
+  .brand h1{font-size:14px;white-space:normal}
+  .savebar{flex-direction:column;align-items:stretch;padding:10px 14px}
+  .savebar-actions .btn{flex:1}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">W</div>
+    <div>
+      <h1>Watermelon Aimbot · 参数控制台</h1>
+      <p>config.ini 可视化调节 · 保存即热重载</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="chips" id="chips"></div>
+    <button class="btn primary" id="btnStart">启动程序</button>
+    <button class="btn danger" id="btnStop" disabled>停止</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-title">配置分区</div>
+    <nav id="nav"></nav>
+    <div class="side-actions">
+      <button class="btn small" id="btnReload">重新读取 config.ini</button>
+      <button class="btn small" id="btnRestore">还原上次备份</button>
+    </div>
+    <p class="side-note">保存后 run.py 会在 0.25 秒内自动热重载，无需按 F11。</p>
+  </aside>
+
+  <div class="main">
+    <div id="bannerHost"></div>
+    <main class="content" id="content">
+      <div class="loading">正在读取配置…</div>
+    </main>
+  </div>
+</div>
+
+<footer class="savebar">
+  <div class="info">
+    <span id="dirtyInfo">正在加载…</span>
+    <span class="path">config.ini</span>
+  </div>
+  <div class="savebar-actions">
+    <button class="btn" id="btnReread">放弃修改</button>
+    <button class="btn primary" id="btnSave" disabled>保存并热重载 (Ctrl+S)</button>
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<div class="modal hidden" id="modal">
+  <div class="modal-box">
+    <h3 id="mTitle"></h3>
+    <p id="mText"></p>
+    <div class="modal-actions">
+      <button class="btn" id="mCancel">取消</button>
+      <button class="btn danger" id="mOk">确认</button>
+    </div>
+  </div>
+</div>
+
+<noscript>需要启用 JavaScript 才能使用参数控制台。</noscript>
+
+<script>
+"use strict";
+
+const CAPTURE_KEYS = ["bettercam_capture", "obs_capture", "mss_capture"];
+
+const state = {
+  sections: [],
+  original: {},
+  mtime: 0,
+  dirty: new Set(),
+  capture: "",
+  status: {},
+  busy: false,
+  banner: null,
+  active: "",
+  observer: null
+};
+
+const $ = (sel, root = document) => root.querySelector(sel);
+
+/* ─────────────── 工具 ─────────────── */
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+async function api(path, options = {}) {
+  const opts = Object.assign({ headers: { "Content-Type": "application/json" } }, options);
+  const res = await fetch(path, opts);
+  let data = {};
+  try { data = await res.json(); } catch (_) { /* ignore */ }
+  if (!res.ok || data.ok === false) {
+    const msgs = Array.isArray(data.errors) && data.errors.length
+      ? data.errors
+      : [data.error || data.message || ("HTTP " + res.status)];
+    const err = new Error(msgs.join("\n"));
+    err.data = data;
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+function flatten(sections) {
+  const out = {};
+  for (const s of sections) {
+    out[s.name] = {};
+    for (const item of s.items) out[s.name][item.key] = item.value;
+  }
+  return out;
+}
+
+function captureFrom(values) {
+  if (!values) return "";
+  const isOn = (k) => String(values[k] || "").toLowerCase() === "true";
+  if (isOn("bettercam_capture")) return "bettercam";
+  if (isOn("obs_capture")) return "obs";
+  if (isOn("mss_capture")) return "mss";
+  return "";
+}
+
+function sameValue(type, a, b) {
+  a = String(a ?? "").trim();
+  b = String(b ?? "").trim();
+  if (type === "bool") return a.toLowerCase() === b.toLowerCase();
+  if (type === "int" || type === "float") {
+    if (a === "" || b === "") return a === b;
+    return Number(a) === Number(b);
+  }
+  return a === b;
+}
+
+function toast(message, type = "info") {
+  const el = document.createElement("div");
+  el.className = "toast " + type;
+  el.textContent = message;
+  $("#toast").appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateY(-4px)";
+    setTimeout(() => el.remove(), 220);
+  }, 4200);
+}
+
+function showError(err) {
+  const msg = err && err.message ? err.message : String(err);
+  toast(msg, "error");
+  showBanner(msg, "error");
+}
+
+/* ─────────────── 横幅 ─────────────── */
+
+function showBanner(text, type = "warn", actionLabel = null, actionFn = null) {
+  state.banner = { text, type, actionLabel, actionFn };
+  renderBanner();
+}
+
+function renderBanner() {
+  const host = $("#bannerHost");
+  if (!host) return;
+  const b = state.banner;
+  if (!b) { host.innerHTML = ""; return; }
+
+  host.innerHTML = `
+    <div class="banner ${b.type === "error" ? "error" : ""}">
+      <div>${esc(b.text)}</div>
+      <div class="banner-actions">
+        ${b.actionLabel ? `<button class="btn small" id="bannerAction">${esc(b.actionLabel)}</button>` : ""}
+        <button class="btn small" id="bannerClose">关闭</button>
+      </div>
+    </div>`;
+
+  const close = $("#bannerClose");
+  if (close) close.addEventListener("click", () => { state.banner = null; renderBanner(); });
+  const action = $("#bannerAction");
+  if (action && b.actionFn) {
+    action.addEventListener("click", () => {
+      const fn = b.actionFn;
+      state.banner = null;
+      renderBanner();
+      fn();
+    });
+  }
+}
+
+/* ─────────────── 渲染 ─────────────── */
+
+function renderNav() {
+  const nav = $("#nav");
+  nav.innerHTML = "";
+  state.sections.forEach((s, idx) => {
+    const a = document.createElement("a");
+    a.className = "nav-item";
+    a.href = "#sec-" + idx;
+    a.dataset.target = "sec-" + idx;
+    a.dataset.section = s.name;
+    if (state.active === a.dataset.target) a.classList.add("active");
+    if (s.items.some((it) => state.dirty.has(s.name + "::" + it.key))) a.classList.add("changed");
+    a.innerHTML = `<span>${esc(s.name)}</span><span class="count">${s.items.length}</span>`;
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target = document.getElementById("sec-" + idx);
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      state.active = "sec-" + idx;
+      highlightNav();
+    });
+    nav.appendChild(a);
+  });
+}
+
+function highlightNav() {
+  document.querySelectorAll(".nav-item").forEach((a) => {
+    a.classList.toggle("active", a.dataset.target === state.active);
+  });
+}
+
+function captureRadioHTML() {
+  const options = [
+    ["bettercam", "BetterCam（DXGI）"],
+    ["obs", "OBS 虚拟摄像头"],
+    ["mss", "MSS 截屏"]
+  ];
+  const rows = options.map(([value, label]) =>
+    `<label class="radio"><input type="radio" name="capture_backend" value="${value}" ${state.capture === value ? "checked" : ""}>${label}</label>`
+  ).join("");
+
+  return `
+    <div class="field full" data-capture-group>
+      <div class="field-top"><label>capture_backend</label><span class="type-tag">radio</span></div>
+      <div class="radio-row">${rows}</div>
+      <p class="hint">三选一。切换后保存，程序会自动重建截取后端。</p>
+      ${state.capture ? "" : '<p class="hint" style="color:var(--danger)">当前没有任何截取后端被启用，保存时会被拒绝。</p>'}
+    </div>`;
+}
+
+function fieldId(sectionName, key) {
+  return "v-" + (sectionName + "--" + key).replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+
+function fieldHTML(section, item) {
+  const changed = state.dirty.has(section.name + "::" + item.key) ? " changed" : "";
+  const full = item.widget === "textarea" ? " full" : "";
+  const desc = item.description ? `<p class="hint">${esc(item.description)}</p>` : "";
+  const id = fieldId(section.name, item.key);
+
+  if (item.type === "bool") {
+    const on = String(item.value).toLowerCase() === "true";
+    return `
+      <div class="field${full}${changed}" data-section="${esc(section.name)}" data-key="${esc(item.key)}">
+        <div class="field-top">
+          <label for="${esc(id)}">${esc(item.key)}</label>
+          <label class="switch">
+            <input id="${esc(id)}" type="checkbox" data-role="value" ${on ? "checked" : ""}>
+            <span class="track"></span>
+            <span class="state">${on ? "开" : "关"}</span>
+          </label>
+        </div>
+        ${desc}
+      </div>`;
+  }
+
+  let control;
+  if (item.widget === "textarea") {
+    control = `<textarea id="${esc(id)}" data-role="value" spellcheck="false" rows="6">${esc(item.value)}</textarea>`;
+  } else if (item.type === "int" || item.type === "float") {
+    const step = item.type === "float" ? "0.01" : "1";
+    control = `<input id="${esc(id)}" type="number" step="${step}" data-role="value" value="${esc(item.value)}">`;
+  } else {
+    control = `<input id="${esc(id)}" type="text" data-role="value" value="${esc(item.value)}" spellcheck="false" autocomplete="off">`;
+  }
+
+  return `
+    <div class="field${full}${changed}" data-section="${esc(section.name)}" data-key="${esc(item.key)}">
+      <div class="field-top"><label for="${esc(id)}">${esc(item.key)}</label><span class="type-tag">${esc(item.type)}</span></div>
+      ${control}
+      ${desc}
+    </div>`;
+}
+
+function sectionHTML(section, idx) {
+  const desc = section.description
+    && !section.description.includes("====")
+    && section.description.length < 180
+    ? section.description : "";
+
+  let items = section.items;
+  let extra = "";
+  if (section.name === "Capture Methods") {
+    extra = captureRadioHTML();
+    items = items.filter((it) => !CAPTURE_KEYS.includes(it.key));
+  }
+
+  return `
+    <section class="card" id="sec-${idx}" data-section-name="${esc(section.name)}">
+      <div class="card-head">
+        <h2>${esc(section.name)}</h2>
+        <span class="badge">${section.items.length} 项</span>
+      </div>
+      ${desc ? `<p class="card-desc">${esc(desc)}</p>` : ""}
+      <div class="fields">
+        ${extra}
+        ${items.map((it) => fieldHTML(section, it)).join("")}
+      </div>
+    </section>`;
+}
+
+function renderSections() {
+  const content = $("#content");
+  content.innerHTML = state.sections.map((s, i) => sectionHTML(s, i)).join("");
+  bindFields();
+  setupObserver();
+}
+
+function bindFields() {
+  document.querySelectorAll(".field[data-key]").forEach((field) => {
+    const el = field.querySelector("[data-role=value]");
+    if (!el) return;
+
+    if (el.type === "checkbox") {
+      el.addEventListener("change", () => {
+        const label = field.querySelector(".state");
+        if (label) label.textContent = el.checked ? "开" : "关";
+        markChanged();
+      });
+    } else {
+      el.addEventListener("input", markChanged);
+      el.addEventListener("change", markChanged);
+    }
+  });
+
+  document.querySelectorAll("input[name=capture_backend]").forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (radio.checked) {
+        state.capture = radio.value;
+        markChanged();
+      }
+    });
+  });
+}
+
+function setupObserver() {
+  if (state.observer) state.observer.disconnect();
+  state.observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        state.active = entry.target.id;
+        highlightNav();
+      }
+    });
+  }, { rootMargin: "-28% 0px -62% 0px", threshold: 0 });
+
+  document.querySelectorAll(".card").forEach((card) => state.observer.observe(card));
+}
+
+/* ─────────────── 取值 / 脏状态 ─────────────── */
+
+function collect() {
+  const out = {};
+  state.sections.forEach((s) => { out[s.name] = {}; });
+
+  document.querySelectorAll(".field[data-key]").forEach((field) => {
+    const section = field.dataset.section;
+    const key = field.dataset.key;
+    const el = field.querySelector("[data-role=value]");
+    if (!el) return;
+    if (!out[section]) out[section] = {};
+    out[section][key] = el.type === "checkbox"
+      ? (el.checked ? "true" : "false")
+      : el.value;
+  });
+
+  if (!out["Capture Methods"]) out["Capture Methods"] = {};
+  for (const key of CAPTURE_KEYS) {
+    out["Capture Methods"][key] = state.capture === key.replace("_capture", "") ? "true" : "false";
+  }
+
+  return out;
+}
+
+function markChanged() {
+  const current = collect();
+  state.dirty.clear();
+
+  for (const section of state.sections) {
+    for (const item of section.items) {
+      const oldValue = state.original[section.name] ? state.original[section.name][item.key] : "";
+      const newValue = current[section.name] ? current[section.name][item.key] : "";
+      if (!sameValue(item.type, oldValue, newValue)) {
+        state.dirty.add(section.name + "::" + item.key);
+      }
+    }
+  }
+
+  document.querySelectorAll(".field[data-key]").forEach((field) => {
+    field.classList.toggle("changed", state.dirty.has(field.dataset.section + "::" + field.dataset.key));
+  });
+
+  updateNavChanged();
+  updateSaveBar();
+}
+
+function updateNavChanged() {
+  document.querySelectorAll(".nav-item").forEach((a) => {
+    const section = state.sections.find((s) => s.name === a.dataset.section);
+    const changed = section && section.items.some((it) => state.dirty.has(section.name + "::" + it.key));
+    a.classList.toggle("changed", !!changed);
+  });
+}
+
+function updateSaveBar() {
+  const count = state.dirty.size;
+  const info = $("#dirtyInfo");
+  if (info) {
+    info.innerHTML = count
+      ? `有 <b>${count}</b> 项未保存`
+      : (state.sections.length ? "所有修改已保存" : "正在加载…");
+  }
+  const saveBtn = $("#btnSave");
+  if (saveBtn) saveBtn.disabled = count === 0 || state.busy;
+}
+
+/* ─────────────── 配置加载 / 应用 ─────────────── */
+
+function applyConfig(res, resetDirty = true) {
+  state.sections = res.sections || [];
+  state.mtime = res.mtime || 0;
+
+  if (resetDirty) {
+    state.original = flatten(state.sections);
+    state.dirty.clear();
+  }
+
+  const captureSection = state.original["Capture Methods"] || {};
+  state.capture = captureFrom(captureSection);
+  state.banner = null;
+  renderBanner();
+
+  renderNav();
+  renderSections();
+  renderStatus();
+  updateSaveBar();
+}
+
+async function loadConfig(silent = false) {
+  const res = await api("/api/config");
+  applyConfig(res, true);
+  if (!silent) toast("已重新读取 config.ini", "success");
+}
+
+async function save() {
+  if (state.busy) return;
+
+  const current = collect();
+  const updates = {};
+
+  for (const section of state.sections) {
+    for (const item of section.items) {
+      if (!state.dirty.has(section.name + "::" + item.key)) continue;
+      if (!updates[section.name]) updates[section.name] = {};
+      updates[section.name][item.key] = current[section.name][item.key];
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    toast("没有需要保存的修改", "info");
+    return;
+  }
+
+  state.busy = true;
+  renderStatus();
+  updateSaveBar();
+
+  try {
+    const res = await api("/api/config", {
+      method: "POST",
+      body: JSON.stringify({ sections: updates })
+    });
+
+    applyConfig(res, true);
+    toast(res.changed ? "已保存，程序会在 0.25 秒内热重载" : "配置文件没有变化", "success");
+
+    if (Array.isArray(res.warnings) && res.warnings.length) {
+      showBanner(res.warnings.join("\n"), "warn");
+    }
+  } catch (err) {
+    showError(err);
+  } finally {
+    state.busy = false;
+    renderStatus();
+    updateSaveBar();
+  }
+}
+
+/* ─────────────── 程序控制 ─────────────── */
+
+function chip(text, cls = "", extra = "") {
+  return `<span class="chip ${cls}"><span class="dot"></span>${esc(text)}${extra ? `<span style="color:var(--dim)">· ${esc(extra)}</span>` : ""}</span>`;
+}
+
+function renderStatus() {
+  const s = state.status || {};
+  const chips = [
+    chip(s.running ? "程序运行中" : "程序未运行", s.running ? "ok" : "", s.running && s.pid ? "PID " + s.pid : ""),
+    chip(s.venv ? "venv 就绪" : "未找到 venv", s.venv ? "ok" : "warn"),
+    chip(s.enc_model ? "加密模型就绪" : "加密模型缺失", s.enc_model ? "ok" : "bad")
+  ];
+  const host = $("#chips");
+  if (host) host.innerHTML = chips.join("");
+
+  const startBtn = $("#btnStart");
+  const stopBtn = $("#btnStop");
+  if (startBtn) startBtn.disabled = !!s.running || state.busy;
+  if (stopBtn) stopBtn.disabled = !s.running || state.busy;
+}
+
+async function refreshStatus() {
+  try {
+    const s = await api("/api/status");
+    const prevMtime = state.mtime;
+    state.status = s;
+    renderStatus();
+
+    if (prevMtime && s.config_mtime && Math.abs(s.config_mtime - prevMtime) > 0.0005) {
+      if (state.dirty.size === 0) {
+        await loadConfig(true);
+        toast("检测到 config.ini 外部变更，已自动刷新", "info");
+      } else {
+        showBanner(
+          "config.ini 已被外部修改（例如程序写回或手动编辑）。当前有未保存的修改，重新读取会丢弃它们。",
+          "warn",
+          "重新读取",
+          () => loadConfig()
+        );
+      }
+    }
+  } catch (err) {
+    state.status = { running: false };
+    renderStatus();
+    showBanner("无法连接本地配置服务，请确认 webui/server.py 仍在运行。", "error");
+  }
+}
+
+async function startProgram() {
+  state.busy = true;
+  renderStatus();
+  updateSaveBar();
+  try {
+    const res = await api("/api/start", { method: "POST" });
+    toast(res.message || "已启动", "success");
+  } catch (err) {
+    showError(err);
+  } finally {
+    state.busy = false;
+    renderStatus();
+    updateSaveBar();
+    setTimeout(refreshStatus, 700);
+  }
+}
+
+async function stopProgram() {
+  state.busy = true;
+  renderStatus();
+  try {
+    const res = await api("/api/stop", { method: "POST" });
+    toast(res.message || "已停止", "success");
+  } catch (err) {
+    showError(err);
+  } finally {
+    state.busy = false;
+    renderStatus();
+    setTimeout(refreshStatus, 500);
+  }
+}
+
+function confirmModal(title, text, okText, onOk) {
+  $("#mTitle").textContent = title;
+  $("#mText").textContent = text;
+  $("#mOk").textContent = okText;
+
+  const modal = $("#modal");
+  modal.classList.remove("hidden");
+
+  const close = () => {
+    modal.classList.add("hidden");
+    $("#mOk").onclick = null;
+    $("#mCancel").onclick = null;
+  };
+
+  $("#mCancel").onclick = close;
+  $("#mOk").onclick = async () => {
+    close();
+    await onOk();
+  };
+}
+
+async function restoreBackup() {
+  state.busy = true;
+  try {
+    const res = await api("/api/restore", { method: "POST" });
+    applyConfig(res, true);
+    toast("已还原到上一次保存前的配置", "success");
+  } catch (err) {
+    showError(err);
+  } finally {
+    state.busy = false;
+    updateSaveBar();
+  }
+}
+
+/* ─────────────── 事件绑定 ─────────────── */
+
+function bindGlobal() {
+  $("#btnSave").addEventListener("click", save);
+
+  $("#btnStart").addEventListener("click", startProgram);
+
+  $("#btnStop").addEventListener("click", () => {
+    confirmModal(
+      "停止程序",
+      "将强制结束 run.py 进程（等同任务管理器结束进程），自动射击可能来不及释放鼠标按键。\n建议优先在程序窗口按 F9 正常退出。",
+      "仍然停止",
+      stopProgram
+    );
+  });
+
+  const reread = () => {
+    if (state.dirty.size) {
+      confirmModal("放弃修改", "有未保存的修改，重新读取会丢弃它们。", "确认读取", () => loadConfig());
+    } else {
+      loadConfig();
+    }
+  };
+  $("#btnReload").addEventListener("click", reread);
+  $("#btnReread").addEventListener("click", reread);
+
+  $("#btnRestore").addEventListener("click", () => {
+    confirmModal(
+      "还原备份",
+      "将 config.ini 还原到上一次保存前的状态。当前未保存的修改也会丢失。",
+      "确认还原",
+      restoreBackup
+    );
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      save();
+    }
+  });
+
+  window.addEventListener("beforeunload", (e) => {
+    if (state.dirty.size) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+}
+
+(async function init() {
+  bindGlobal();
+  try {
+    await loadConfig(true);
+  } catch (err) {
+    $("#content").innerHTML = `<div class="empty">${esc(err.message)}</div>`;
+    showError(err);
+  }
+  await refreshStatus();
+  setInterval(refreshStatus, 2000);
+})();
+</script>
+</body>
+</html>
